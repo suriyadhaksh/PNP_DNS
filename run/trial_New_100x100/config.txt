@@ -1,0 +1,16 @@
+ifBoxGrid = True;
+nsd = 2;
+basisFunction = "linear";
+ifDD = False;
+Lx = 1;
+Ly = 1;
+Lz = 1;
+Nelemx = 100;
+Nelemy = 100;
+typeOfIC = 1;
+dt = 0.001;
+totalT = 1;
+val_0 = 1;
+val_1 = 1;
+dbLength = 1.0;
+use_bdf2 = True;

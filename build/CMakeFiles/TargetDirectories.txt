@@ -1,0 +1,3 @@
+/home/suriya/PROJECTS/PNP_FullResidual_MMSGF/build/CMakeFiles/pnp.dir
+/home/suriya/PROJECTS/PNP_FullResidual_MMSGF/build/CMakeFiles/edit_cache.dir
+/home/suriya/PROJECTS/PNP_FullResidual_MMSGF/build/CMakeFiles/rebuild_cache.dir

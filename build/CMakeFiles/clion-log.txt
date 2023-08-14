@@ -1,0 +1,4 @@
+/home/suriya/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/222.3345.126/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/suriya/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/222.3345.126/bin/ninja/linux/ninja -Dtalyfem_DIR=~/PACKAGES/taly_fem/build -G Ninja -S /home/suriya/PROJECTS/PNP_FullResidual_MMSGF -B /home/suriya/PROJECTS/PNP_FullResidual_MMSGF/build
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/suriya/PROJECTS/PNP_FullResidual_MMSGF/build
