@@ -136,7 +136,8 @@ public:
             c[species_idx] = this->p_data_->valueFEM(fe, PNPNodeData::C_IDX + species_idx);
             c_prev[species_idx] = this->p_data_->valueFEM(fe, PNPNodeData::C_PREV_IDX + species_idx);
             c_prev_2[species_idx] = this->p_data_->valueFEM(fe, PNPNodeData::C_PREV_2_IDX + species_idx);
-            forcingC[species_idx] = NPForcing(fe, species_idx, t + dt);
+            //forcingC[species_idx] = NPForcing(fe, species_idx, t + dt);
+            forcingC[species_idx] = 0.0;
 
             for(int dir = 0; dir < nsd; dir ++) {
                 dc(species_idx, dir) = this->p_data_->valueDerivativeFEM(fe,PNPNodeData::C_IDX + species_idx,dir);
@@ -170,12 +171,14 @@ public:
             double net_vel_mag = sqrt(netVelocitySumOfSquares);
             double Pe = net_vel_mag * h / (2  * 1); //1 is the diffusivity coeff
 
-            tau[species_idx] = 1 / sqrt( 4/(dt*dt) + 4* net_vel_mag * net_vel_mag/(h*h) + 9/(Pe*Pe));
+            // tau[species_idx] = 1 / sqrt( 4/(dt*dt) + 4* net_vel_mag * net_vel_mag/(h*h) + 9/(Pe*Pe));
+            tau[species_idx] = 0.0;
 
 
         }
 
-        double forcePhi = PoissonForcing(fe, t + dt);
+        //double forcePhi = PoissonForcing(fe, t + dt);
+        double forcePhi = 0.0;
 
 
         //Stiffness Matrix
@@ -263,7 +266,7 @@ public:
                 delta += fe.dN(a, dir) * netVelocity(0,dir) * tau[0];
             }
 
-/*            be((noOfSpecies + 1)*a + phi_idx) += ( fe.N(a) + delta ) * M * detJxW
+            /*be((noOfSpecies + 1)*a + phi_idx) += ( fe.N(a) + delta ) * M * detJxW
                     - 2 * lambda_ * lambda_ * S * detJxW
                     - (fe.N(a) + delta ) * forcePhi * detJxW;*/
 
@@ -275,8 +278,8 @@ public:
 
 
     void Integrands4side(const FEMElm &fe, const int sideInd, ZeroMatrix<double> &Ae, ZEROARRAY<double> &be) override {
-        calcAe_weak(fe, sideInd, Ae);
-        calcbe_weak(fe, sideInd, be);
+        // calcAe_weak(fe, sideInd, Ae);
+        // calcbe_weak(fe, sideInd, be);
     }
 
     void copyBoundaryConditions(const ZeroMatrix<int> &BoundaryConditionArray) {

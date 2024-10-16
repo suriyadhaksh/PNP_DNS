@@ -49,22 +49,20 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
      double force = 0.0;
      switch (species_id) {
          case 0:
-             force = 4*pow(M_PI,2)*z_[0]*pow(cos(2*M_PI*t),2)*pow(cos(2*M_PI*x),2)*pow(cos(2*M_PI*y),2)
-                     +8*pow(M_PI,2)*cos(2*M_PI*t)*cos(2*M_PI*x)*sin(2*M_PI*y)
-                     -2*M_PI*pow(cos(2*M_PI*t),2)*pow(cos(2*M_PI*x),2)*cos(2*M_PI*y)*sin(2*M_PI*y)
-                     -2*M_PI*cos(2*M_PI*x)*sin(2*M_PI*t)*sin(2*M_PI*y)
-                     -2*M_PI*pow(cos(2*M_PI*t),2)*cos(2*M_PI*y)*pow(sin(2*M_PI*x),2)*sin(2*M_PI*y)
-                     -8*pow(M_PI,2)*z_[0]*pow(cos(2*M_PI*t),2)*pow(cos(2*M_PI*x),2)*pow(sin(2*M_PI*y),2)
-                     +4*pow(M_PI,2)*z_[0]*pow(cos(2*M_PI*t),2)*pow(sin(2*M_PI*x),2)*pow(sin(2*M_PI*y),2);
+             force = -4*(-1-exp(-8*t))*(1+exp(-8*t))*pow(M_PI,2)*z_[0]*pow(cos(2*M_PI*x),2)*pow(cos(2*M_PI*y),2)
+                     -(8*cos(2*M_PI*x)*sin(2*M_PI*y))*exp(-8*t)+8*(1+exp(-8*t))*pow(M_PI,2)*cos(2*M_PI*x)*sin(2*M_PI*y)
+                     -2*(1+exp(-8*t))*M_PI*cos(2*M_PI*t)*pow(cos(2*M_PI*x),2)*cos(2*M_PI*y)*sin(2*M_PI*y)
+                     -2*(1+exp(-8*t))*M_PI*cos(2*M_PI*t)*cos(2*M_PI*y)*pow(sin(2*M_PI*x),2)*sin(2*M_PI*y)
+                     +8*(-1-exp(-8*t))*(1+exp(-8*t))*pow(M_PI,2)*z_[0]*pow(cos(2*M_PI*x),2)*pow(sin(2*M_PI*y),2)
+                     -4*(-1-exp(-8*t))*(1+exp(-8*t))*pow(M_PI,2)*z_[0]*pow(sin(2*M_PI*x),2)*pow(sin(2*M_PI*y),2);
 
              break;
 
          case 1:
-             force = 8*pow(M_PI,2)*cos(2*M_PI*t)*cos(2*M_PI*y)*sin(2*M_PI*x)
-                     +2*M_PI*pow(cos(2*M_PI*t),2)*cos(2*M_PI*x)*pow(cos(2*M_PI*y),2)*sin(2*M_PI*x)
-                     -2*M_PI*cos(2*M_PI*y)*sin(2*M_PI*t)*sin(2*M_PI*x)
-                     -16*pow(M_PI,2)*z_[1]*pow(cos(2*M_PI*t),2)*cos(2*M_PI*x)*cos(2*M_PI*y)*sin(2*M_PI*x)*sin(2*M_PI*y)
-                     +2*M_PI*pow(cos(2*M_PI*t),2)*cos(2*M_PI*x)*sin(2*M_PI*x)*pow(sin(2*M_PI*y),2);
+             force = (-8*cos(2*M_PI*y)*sin(2*M_PI*x))*exp(-8*t)+8*(1+exp(-8*t))*pow(M_PI,2)*cos(2*M_PI*y)*sin(2*M_PI*x)
+                     +2*(1+exp(-8*t))*M_PI*cos(2*M_PI*t)*cos(2*M_PI*x)*pow(cos(2*M_PI*y),2)*sin(2*M_PI*x)
+                     +16*(-1-exp(-8*t))*(1+exp(-8*t))*pow(M_PI,2)*z_[1]*cos(2*M_PI*x)*cos(2*M_PI*y)*sin(2*M_PI*x)*sin(2*M_PI*y)
+                     +2*(1+exp(-8*t))*M_PI*cos(2*M_PI*t)*cos(2*M_PI*x)*sin(2*M_PI*x)*pow(sin(2*M_PI*y),2);
 
              break;
 
@@ -82,9 +80,9 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
      double x = p.x();
      double y = p.y();
 
-     double force = z_[1]*cos(2*M_PI*t)*cos(2*M_PI*y)*sin(2*M_PI*x)
-             +16*pow(lambda_,2)*pow(M_PI,2)*cos(2*M_PI*t)*cos(2*M_PI*x)*sin(2*M_PI*y)
-             +z_[0]*cos(2*M_PI*t)*cos(2*M_PI*x)*sin(2*M_PI*y);
+     double force = (1+exp(-8*t))*z_[1]*cos(2*M_PI*y)*sin(2*M_PI*x)
+             -16*(-1-exp(-8*t))*pow(lambda_,2)*pow(M_PI,2)*cos(2*M_PI*x)*sin(2*M_PI*y)
+             +(1+exp(-8*t))*z_[0]*cos(2*M_PI*x)*sin(2*M_PI*y);
 
 
      return force;
@@ -111,7 +109,9 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
              //Does the node lie on the specific boundary?
              if (p_grid_->BoNode(nodeID, boundary)){
 
-                 //Loop over all species
+                 //Loop over all species - do nothing for C species
+
+                 /***
                  for (int species_idx = 0; species_idx < noOfSpecies; species_idx++) {
                      //Is this Dirichlet imposition?
                      if(BoundaryConditionArray_(boundary, species_idx) == DIRICHLET) {
@@ -119,10 +119,14 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
                          p_data_->GetNodeData(nodeID).u[PNPNodeData::C_IDX + species_idx] = c;
                      }
                  }
+                 ***/
 
                  //Check on Phi
                  if(BoundaryConditionArray_(boundary, phi_idx) == DIRICHLET) {
-                     double phi = calc_Phi_at(p, t+dt);
+                     double phi = 0.0;
+                     if (boundary == LEFT) {phi = -1.0;}
+                     if (boundary == RIGHT) {phi = 1.0;}
+
                      p_data_->GetNodeData(nodeID).u[PNPNodeData::PHI_IDX] = phi;
                  }
 
@@ -141,11 +145,11 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
 
      switch (species_idx){
          case 0:
-             value = cos(2*M_PI*t)*cos(2*M_PI*x)*sin(2*M_PI*y);
+             value = (1+exp(-8*t))*cos(2*M_PI*x)*sin(2*M_PI*y);
              break;
 
          case 1:
-             value = cos(2*M_PI*t)*cos(2*M_PI*y)*sin(2*M_PI*x);
+             value = (1+exp(-8*t))*cos(2*M_PI*y)*sin(2*M_PI*x);
              break;
 
          default:
@@ -159,7 +163,7 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
 
      double x = location.x();
      double y = location.y();
-     return -1 * cos(2*M_PI*t)*cos(2*M_PI*x)*sin(2*M_PI*y);
+     return -(1+exp(-8*t))*cos(2*M_PI*x)*sin(2*M_PI*y);
  }
 
 
@@ -173,14 +177,14 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
 
         switch (species_idx){
             case 0:
-                dC_dx = -2*M_PI*cos(2*M_PI*t)*sin(2*M_PI*x)*sin(2*M_PI*y);
-                dC_dy = 2*M_PI*cos(2*M_PI*t)*cos(2*M_PI*x)*cos(2*M_PI*y);
+                dC_dx = -2*(1+exp(-8*t))*M_PI*sin(2*M_PI*x)*sin(2*M_PI*y);
+                dC_dy = 2*(1+exp(-8*t))*M_PI*cos(2*M_PI*x)*cos(2*M_PI*y);
 
                 break;
 
             case 1:
-                dC_dx = 2*M_PI*cos(2*M_PI*t)*cos(2*M_PI*x)*cos(2*M_PI*y);
-                dC_dy = -2*M_PI*cos(2*M_PI*t)*sin(2*M_PI*x)*sin(2*M_PI*y);
+                dC_dx = 2*(1+exp(-8*t))*M_PI*cos(2*M_PI*x)*cos(2*M_PI*y);
+                dC_dy = -2*(1+exp(-8*t))*M_PI*sin(2*M_PI*x)*sin(2*M_PI*y);
 
                 break;
 
@@ -198,8 +202,8 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
      double x = location.x();
      double y = location.y();
 
-     double dPhi_dx = 2*M_PI*cos(2*M_PI*t)*sin(2*M_PI*x)*sin(2*M_PI*y);
-     double dPhi_dy = -2*M_PI*cos(2*M_PI*t)*cos(2*M_PI*x)*cos(2*M_PI*y);
+     double dPhi_dx = -2*(-1-exp(-8*t))*M_PI*sin(2*M_PI*x)*sin(2*M_PI*y);
+     double dPhi_dy = 2*(-1-exp(-8*t))*M_PI*cos(2*M_PI*x)*cos(2*M_PI*y);
      double dPhi_dz = 0;
 
 
@@ -235,7 +239,7 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
 
      const int phi_idx = PNPNodeData::PHI_IDX;
      if(BoundaryConditionArray_(sideInd, phi_idx) == NEUMANN) {
-         const double lambda = lambda_;
+         const double lambda_ = lambda_;
          double gradPhixNormal = calc_grad_Phi_at(p,t_ + dt_).innerProduct(normal);
          for (int a = 0; a < nbf; a++){
 
@@ -244,7 +248,7 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
                  be((noOfSpecies + 1)*a + i) +=  - fe.N(a) * z_[i] * c * gradPhixNormal * detSideJxW;
              }
 
-             be((noOfSpecies + 1)*a + phi_idx) += - 2 * lambda * lambda * fe.N(a) * gradPhixNormal * detSideJxW;
+             be((noOfSpecies + 1)*a + phi_idx) += - 2 * lambda_ * lambda_ * fe.N(a) * gradPhixNormal * detSideJxW;
 
          }
      }

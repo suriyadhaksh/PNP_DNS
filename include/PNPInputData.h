@@ -107,21 +107,21 @@ struct PNPInputData : public InputData {
       //Boundary indices start from 1. Hence the first row is left unused.
 
       const int c1Index = 0;
-      BoundaryConditionArray(LEFT, c1Index) = DIRICHLET;
-      BoundaryConditionArray(RIGHT, c1Index) = DIRICHLET;
-      BoundaryConditionArray(BOTTOM, c1Index) = DIRICHLET;
-      BoundaryConditionArray(TOP, c1Index) = DIRICHLET;
-      BoundaryConditionArray(BACK, c1Index) = DIRICHLET;
-      BoundaryConditionArray(FRONT, c1Index) = DIRICHLET;
+      BoundaryConditionArray(LEFT, c1Index) = NEUMANN;
+      BoundaryConditionArray(RIGHT, c1Index) = NEUMANN;
+      BoundaryConditionArray(BOTTOM, c1Index) = NEUMANN;
+      BoundaryConditionArray(TOP, c1Index) = NEUMANN;
+      BoundaryConditionArray(BACK, c1Index) = NEUMANN;
+      BoundaryConditionArray(FRONT, c1Index) = NEUMANN;
 
       //1 - C2 Boundary Imposition
       const int c2Index = 1;
-      BoundaryConditionArray(LEFT, c2Index) = DIRICHLET;
-      BoundaryConditionArray(RIGHT, c2Index) = DIRICHLET;
-      BoundaryConditionArray(BOTTOM, c2Index) = DIRICHLET;
-      BoundaryConditionArray(TOP, c2Index) = DIRICHLET;
-      BoundaryConditionArray(BACK, c2Index) = DIRICHLET;
-      BoundaryConditionArray(FRONT, c2Index) = DIRICHLET;
+      BoundaryConditionArray(LEFT, c2Index) = NEUMANN;
+      BoundaryConditionArray(RIGHT, c2Index) = NEUMANN;
+      BoundaryConditionArray(BOTTOM, c2Index) = NEUMANN;
+      BoundaryConditionArray(TOP, c2Index) = NEUMANN;
+      BoundaryConditionArray(BACK, c2Index) = NEUMANN;
+      BoundaryConditionArray(FRONT, c2Index) = NEUMANN;
 
       //2 - Phi Boundary Imposition
       const int phiIndex = PNPNodeData::PHI_IDX;

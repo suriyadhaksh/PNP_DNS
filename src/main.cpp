@@ -119,7 +119,7 @@ int main(int argc, char **args) {
     save_gf(&data, &input_data, "data_guess.plt", 0.0);
 
     int n_time_steps = int( input_data.totalT / input_data.dt );
-    int no_of_frames = 70;
+    int no_of_frames = 10;
     int time_skip = n_time_steps / no_of_frames;
 
     double t = 0.0;

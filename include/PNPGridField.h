@@ -40,14 +40,16 @@ class PNPGridField : public GridField<PNPNodeData> {
           ZEROPTV pt = p_grid_->GetNode(nodeID)->location();
 
           for (int i = 0; i < noOfSpecies; i++) {
-              double c_init = pnpeq_->calc_C_at(pt, 0, i);
+              //double c_init = pnpeq_->calc_C_at(pt, 0, i);
+              double c_init = 1.0; // for leading order case
               pData->u[i] = c_init;
               pData->u_prev[i] = c_init;
               pData->u_prev2[i] = c_init;
               pData->u[c_mms_idx + i] = c_init;
           }
 
-          double phi_init = pnpeq_->calc_Phi_at(pt,0);
+          // double phi_init = pnpeq_->calc_Phi_at(pt,0);
+          double phi_init = 0.0;
           pData->u[phi_idx] = phi_init;
           pData->u[phi_mms_idx] = phi_init;
       }
@@ -104,6 +106,32 @@ class PNPGridField : public GridField<PNPNodeData> {
       PrintInfo("L2Error_Phi = ", L2Error[PNPNodeData::PHI_IDX]);
       filePtErrorManufacSol.close();
     }
+  }
+
+  std::vector<double> CalcTotalConcentration(const InputData *input_data, double t,
+                                               bool ifDD) const {
+
+      FEMElm fe(p_grid_, BASIS_FIRST_DERIVATIVE | BASIS_POSITION);
+
+      int noOfSpecies = PNPNodeData::NO_OF_SPECIES;
+
+      std::vector<double> C_total(noOfSpecies, 0.0);
+
+      const double n_elements = p_grid_->n_elements();
+      for (int elm_id = 0; elm_id < n_elements; elm_id++) {
+          fe.refill(elm_id, input_data->basisFunction, 0);
+          while (fe.next_itg_pt()) {
+              const double detJxW = fe.detJxW();
+
+              for (int i = 0; i < noOfSpecies; i++) {
+                  double calculatedCSol = valueFEM(fe, i);
+                  C_total[i] +=  calculatedCSol * detJxW;
+              }
+
+          }
+      }
+
+      return C_total;
   }
 
 
