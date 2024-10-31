@@ -23,13 +23,13 @@ class PNPNodeData {
  public:
   enum ValueIndex {
 
-    NO_OF_SPECIES = 2, //No of species
+    NO_OF_SPECIES = 2,                            //No of species
 
-    C_IDX = 0, //Species Concentration
-    PHI_IDX = NO_OF_SPECIES, //Electrical Potential
+    C_IDX = 0,                                   //Species Concentration
+    PHI_IDX = NO_OF_SPECIES,                     //Electrical Potential
 
-    C_MMS_IDX = PHI_IDX + 1, //Species Concentration - MMS
-    PHI_MMS_IDX = C_MMS_IDX + NO_OF_SPECIES, //Electric Potential - MMS
+    C_MMS_IDX = PHI_IDX + 1,                    //Species Concentration - MMS
+    PHI_MMS_IDX = C_MMS_IDX + NO_OF_SPECIES,    //Electric Potential - MMS
 
     NUM_VARS = (NO_OF_SPECIES + 1) * 2, //No of variables (Includes variables and MMS)
 

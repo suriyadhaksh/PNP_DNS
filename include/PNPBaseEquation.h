@@ -98,6 +98,28 @@ public:
     }
 
     void Integrands(const FEMElm &fe, ZeroMatrix<double> &Ae, ZEROARRAY<double> &be) override {
+        // PrintStatus("We are inside Integrands");
+        // IntegrandsSUPG(fe, Ae,  be);
+        IntegrandsGeneric(fe, Ae, be);
+    }
+
+
+    void Integrands4side(const FEMElm &fe, const int sideInd, ZeroMatrix<double> &Ae, ZEROARRAY<double> &be) override {
+        // calcAe_weak(fe, sideInd, Ae);
+        // calcbe_weak(fe, sideInd, be);
+    }
+
+    void copyBoundaryConditions(const ZeroMatrix<int> &BoundaryConditionArray) {
+        BoundaryConditionArray_ = BoundaryConditionArray;
+    }
+
+    void setParams(const double lambda, double gridSpacing, double * z) {
+        lambda_ = lambda;
+        h_ = gridSpacing;
+        z_ = z;
+    }
+
+    void IntegrandsSUPG(const FEMElm &fe, ZeroMatrix<double> &Ae, ZEROARRAY<double> &be) {
 
         const int nsd = fe.nsd();
         const int n_basis_functions = fe.nbf();
@@ -157,7 +179,7 @@ public:
                 //diffusion += this->p_data_->value2DerivativeFEM(fe, PNPNodeData::C_IDX + species_idx, dir, dir);
                 electromobility += z_[species_idx]*dphi(dir)*dc(species_idx,dir);
                 //electromobility += z_[species_idx]*c[species_idx]*d2phi_dir_dir(dir)
-                                   //+ z_[species_idx]*dphi(dir)*dc(species_idx,dir);
+                //+ z_[species_idx]*dphi(dir)*dc(species_idx,dir);
 
                 netVelocity(species_idx,dir) = velocity(dir) - z_[species_idx] * dphi(dir);
                 netVelocitySumOfSquares += netVelocity(species_idx,dir) * netVelocity(species_idx,dir);
@@ -216,17 +238,17 @@ public:
                                                                             + H
                                                                             + I * z_[i]
                                                                             + 3 * J * tau[i] * fe.N(b) * detJxW / (2 * dt);
-                                                                            + J * K * tau[i] ;
+                    + J * K * tau[i] ;
 
                     Ae((noOfSpecies + 1)*a + i, (noOfSpecies + 1)*b + phi_idx) += H * z_[i] * c[i]
-                            - J * L * tau[i]
-                            + H * tau[i] * z_[i] * nernstPlanck[i];
+                                                                                  - J * L * tau[i]
+                                                                                  + H * tau[i] * z_[i] * nernstPlanck[i];
 
 
                     Ae((noOfSpecies + 1)*a + phi_idx, (noOfSpecies + 1)*b + i) += - F * z_[i];
 
                     //Ae((noOfSpecies + 1)*a + phi_idx, (noOfSpecies + 1)*b + i) += F * z_[i]
-                                                                                  //+ J * tau[i] * fe.N(b) * z_[i] * detJxW;
+                    //+ J * tau[i] * fe.N(b) * z_[i] * detJxW;
                 }
 
                 Ae((noOfSpecies + 1)*a + phi_idx, (noOfSpecies + 1)*b + phi_idx) += 2 * lambda_ * lambda_ * H;
@@ -270,26 +292,115 @@ public:
                     - 2 * lambda_ * lambda_ * S * detJxW
                     - (fe.N(a) + delta ) * forcePhi * detJxW;*/
 
-            be((noOfSpecies + 1)*a + phi_idx) += - ( fe.N(a) ) * M * detJxW
+            be((noOfSpecies + 1)*a + phi_idx) += - fe.N(a) * M * detJxW
                                                  + 2 * lambda_ * lambda_ * S * detJxW
                                                  - (fe.N(a) ) * forcePhi * detJxW;
         }
+
     }
 
+    void IntegrandsGeneric(const FEMElm &fe, ZeroMatrix<double> &Ae, ZEROARRAY<double> &be) {
 
-    void Integrands4side(const FEMElm &fe, const int sideInd, ZeroMatrix<double> &Ae, ZEROARRAY<double> &be) override {
-        // calcAe_weak(fe, sideInd, Ae);
-        // calcbe_weak(fe, sideInd, be);
-    }
+        const int nsd = fe.nsd();
+        const int n_basis_functions = fe.nbf();
+        const double detJxW = fe.detJxW();
+        const double t = this->t_;
+        double dt = this->dt_;
+        const int noOfSpecies = PNPNodeData::NO_OF_SPECIES;
+        const int phi_idx = PNPNodeData::PHI_IDX;
 
-    void copyBoundaryConditions(const ZeroMatrix<int> &BoundaryConditionArray) {
-        BoundaryConditionArray_ = BoundaryConditionArray;
-    }
+        // ------------ solution guess vectors & arrays ------------ //
+        std::vector<double> c (noOfSpecies);
+        std::vector<double> c_prev (noOfSpecies);
+        std::vector<double> c_prev_2 (noOfSpecies);
+        ZeroMatrix<double> dc;
+        dc.redim(noOfSpecies, nsd);
+        ZEROPTV dphi;
 
-    void setParams(const double lambda, double gridSpacing, double * z) {
-        lambda_ = lambda;
-        h_ = gridSpacing;
-        z_ = z;
+        // ------------ fill all solution guess vectors & arrays ------------ //
+        for (int dir = 0; dir < nsd; dir++) {
+            dphi(dir) = this->p_data_->valueDerivativeFEM(fe, phi_idx, dir);
+        }
+
+        for (int species_idx = 0; species_idx < noOfSpecies; species_idx++){
+            c[species_idx] = this->p_data_->valueFEM(fe, PNPNodeData::C_IDX + species_idx);
+            c_prev[species_idx] = this->p_data_->valueFEM(fe, PNPNodeData::C_PREV_IDX + species_idx);
+            c_prev_2[species_idx] = this->p_data_->valueFEM(fe, PNPNodeData::C_PREV_2_IDX + species_idx);
+
+            for(int dir = 0; dir < nsd; dir ++) {
+                dc(species_idx, dir) = this->p_data_->valueDerivativeFEM(fe,PNPNodeData::C_IDX + species_idx,dir);
+            }
+        }
+
+
+        // ------------ assemble the jacobian ------------ //
+        for (int a = 0; a < n_basis_functions; a++) {
+
+            for (int b = 0; b < n_basis_functions; b++) {
+
+                // Nernst Planck terms
+                //double Dtemporal_DC = 3 * fe.N(a) * fe.N(b) / (2 * dt) * detJxW;
+                double Dtemporal_DC = fe.N(a) * fe.N(b) / dt * detJxW;
+                double Ddiffusion_DC = 0.0;
+                double Delectromigration_DC = 0.0;
+                double Delectromigration_DPhi = 0.0;
+
+                // Poisson terms
+                double Dchargedensity_DC = fe.N(a) * fe.N(b) * detJxW;
+                double Dphilaplacian_Dphi = 0.0;
+
+                for (int dir = 0; dir < nsd; dir++) {
+                    Ddiffusion_DC += fe.dN(a, dir) * fe.dN(b, dir) * detJxW;
+                    Delectromigration_DC += fe.dN(a, dir) * dphi(dir) * fe.N(b) * detJxW;
+                    Delectromigration_DPhi += fe.dN(a, dir) * fe.dN(b, dir) * detJxW;
+                    Dphilaplacian_Dphi += 2 * lambda_ * lambda_ * fe.dN(a, dir) * fe.dN(b, dir) * detJxW;
+                }
+
+                for (int i = 0; i < noOfSpecies; i++) {
+                    // Nernst Planck
+                    Ae((noOfSpecies + 1)*a + i, (noOfSpecies + 1)*b + i) += Dtemporal_DC + Ddiffusion_DC + Delectromigration_DC * z_[i];
+                    Ae((noOfSpecies + 1)*a + i, (noOfSpecies + 1)*b + phi_idx) -= Delectromigration_DPhi * z_[i] * c[i];
+
+                    // Poisson equation
+                    Ae((noOfSpecies + 1)*a + phi_idx, (noOfSpecies + 1)*b + i) += - Dchargedensity_DC  * z_[i];
+
+                }
+
+                // Poisson equation
+                Ae((noOfSpecies + 1)*a + phi_idx, (noOfSpecies + 1)*b + phi_idx) -= Dphilaplacian_Dphi;
+
+            }
+
+            // ------------ assemble the rhs ------------ //
+            double chargedensity = 0.0;
+
+            for (int i = 0; i < noOfSpecies; i++) {
+                // double temporal = fe.N(a) * ( 3 * c[i] - 4 * c_prev[i] + c_prev_2[i] ) / (2 * dt)* detJxW;
+                double temporal = fe.N(a) * (c[i] - c_prev[i]) / dt * detJxW;
+                double diffusion = 0.0;
+                double electromigration = 0.0;
+
+                for (int dir = 0; dir < nsd; dir++) {
+                    diffusion += fe.dN(a, dir) * dc(i, dir) * detJxW;
+                    electromigration += fe.dN(a, dir) * z_[i] * c[i] * dphi(dir) * detJxW;
+                }
+
+                // Nernst planck
+                be((noOfSpecies + 1)*a + i) += temporal + diffusion + electromigration;
+
+                //for the poisson equation
+                chargedensity += fe.N(a) * z_[i] * c[i] * detJxW;
+            }
+
+            double philaplacian = 0.0;
+            for(int dir = 0; dir < nsd; dir++) {
+                philaplacian += 2 * lambda_ * lambda_ * fe.dN(a, dir) * dphi(dir) * detJxW;
+            }
+
+            // poisson
+            be((noOfSpecies + 1)*a + phi_idx) -= - chargedensity
+                                                 + philaplacian;
+        }
     }
 
 

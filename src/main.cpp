@@ -60,15 +60,14 @@ int main(int argc, char **args) {
       std::clog << input_data;
 
       std::fstream filePtErrorManufacSol;
-      std::string fileName = "Error_data_" + std::to_string(PNPNodeData::NO_OF_SPECIES) + "_Species.plt";
+      std::string fileName = "Total_C_data.plt";
       filePtErrorManufacSol.open(fileName, std::ios::app);
       filePtErrorManufacSol << "VARIABLES = \"t\"";
 
       for (int i = 0; i < PNPNodeData::NO_OF_SPECIES; i++) {
           filePtErrorManufacSol << " \"C_" << i << "\"";
       }
-
-      filePtErrorManufacSol << " \"Phi\"" << std::endl;
+      filePtErrorManufacSol << std::endl;
       filePtErrorManufacSol.close();
     }
 
@@ -116,15 +115,16 @@ int main(int argc, char **args) {
     PrintStatus("Dirichlet BC applied");
     data.setMMS(&PNPEq2);
 
-    save_gf(&data, &input_data, "data_guess.plt", 0.0);
+    save_gf(&data, &input_data, "data_initial.plt", 0.0);
 
     int n_time_steps = int( input_data.totalT / input_data.dt );
-    int no_of_frames = 10;
+    int no_of_frames = 20;
     int time_skip = n_time_steps / no_of_frames;
 
     double t = 0.0;
     int timeStepCounter = 0;
     double dt = input_data.dt;
+
     while (t < input_data.totalT) {
 
       PrintStatus("Solver time step:", timeStepCounter);
@@ -147,7 +147,7 @@ int main(int argc, char **args) {
       }
 
       PrintStatus("Time Step: ", timeStepCounter, " Time: ", t);
-      data.PrintError(t);
+      data.PrintTotalConcentration(t);
 
 
       //std::string name = Suffix("data.plt", t / dt);

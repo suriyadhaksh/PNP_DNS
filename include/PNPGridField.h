@@ -76,6 +76,36 @@ class PNPGridField : public GridField<PNPNodeData> {
       pnpeq_ = pnpeq;
   }
 
+  void PrintTotalConcentration(double t){
+      std::vector<double> TotalConcentration;
+      std::fstream filePtErrorManufacSol;
+
+      int noOfSpecies = PNPNodeData::NO_OF_SPECIES;
+
+      std::string fileName = "Total_C_data.plt";
+
+      int rank;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      if (!rank) {
+          TotalConcentration = CalcTotalConcentration(this->input_data_, t, this->input_data_->ifDD);
+
+          filePtErrorManufacSol.open(fileName, std::ios::app);
+
+          filePtErrorManufacSol << t;
+          for (int i = 0; i < noOfSpecies; i++) {
+              filePtErrorManufacSol << "\t" << TotalConcentration[i];
+          }
+          filePtErrorManufacSol <<  std::endl;
+
+          for (int i = 0; i < noOfSpecies; i++) {
+              std::string str = "Total_C" + std::to_string(i) + " = ";
+              PrintInfo(str, TotalConcentration[i]);
+          }
+          filePtErrorManufacSol.close();
+      }
+
+  }
+
   /// Compare with manufactured solution
   void PrintError(double t) {
     std::vector<double> L2Error;

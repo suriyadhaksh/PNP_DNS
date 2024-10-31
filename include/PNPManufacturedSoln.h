@@ -1,5 +1,5 @@
- #pragma once
-//#include <talyfem/equations/NSBaseEquation.h>
+#pragma once
+
 #include "PNPNodeData.h"
 #include "PNPBaseEquation.h"
 #include "PNPInputData.h"
@@ -31,73 +31,24 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
 }
 
  ZEROPTV PNPManufacturedSoln::velocityField(const FEMElm &fe, const double t) {
-
-     const ZEROPTV p = fe.position();
-
-     double u = cos(2 * M_PI * t)*sin(2*M_PI*p.x())*cos(2*M_PI*p.y());
-     double v = - cos(2 * M_PI * t)*cos(2*M_PI*p.x())*sin(2*M_PI*p.y());
-     double w = 0.0;
-
-     return ZEROPTV(u, v, w);
+     return ZEROPTV(0.0, 0.0, 0.0);
  }
 
  double PNPManufacturedSoln::NPForcing(const FEMElm &fe, const int species_id, double t) {
-     const ZEROPTV p = fe.position();
-     double x = p.x();
-     double y = p.y();
-
-     double force = 0.0;
-     switch (species_id) {
-         case 0:
-             force = -4*(-1-exp(-8*t))*(1+exp(-8*t))*pow(M_PI,2)*z_[0]*pow(cos(2*M_PI*x),2)*pow(cos(2*M_PI*y),2)
-                     -(8*cos(2*M_PI*x)*sin(2*M_PI*y))*exp(-8*t)+8*(1+exp(-8*t))*pow(M_PI,2)*cos(2*M_PI*x)*sin(2*M_PI*y)
-                     -2*(1+exp(-8*t))*M_PI*cos(2*M_PI*t)*pow(cos(2*M_PI*x),2)*cos(2*M_PI*y)*sin(2*M_PI*y)
-                     -2*(1+exp(-8*t))*M_PI*cos(2*M_PI*t)*cos(2*M_PI*y)*pow(sin(2*M_PI*x),2)*sin(2*M_PI*y)
-                     +8*(-1-exp(-8*t))*(1+exp(-8*t))*pow(M_PI,2)*z_[0]*pow(cos(2*M_PI*x),2)*pow(sin(2*M_PI*y),2)
-                     -4*(-1-exp(-8*t))*(1+exp(-8*t))*pow(M_PI,2)*z_[0]*pow(sin(2*M_PI*x),2)*pow(sin(2*M_PI*y),2);
-
-             break;
-
-         case 1:
-             force = (-8*cos(2*M_PI*y)*sin(2*M_PI*x))*exp(-8*t)+8*(1+exp(-8*t))*pow(M_PI,2)*cos(2*M_PI*y)*sin(2*M_PI*x)
-                     +2*(1+exp(-8*t))*M_PI*cos(2*M_PI*t)*cos(2*M_PI*x)*pow(cos(2*M_PI*y),2)*sin(2*M_PI*x)
-                     +16*(-1-exp(-8*t))*(1+exp(-8*t))*pow(M_PI,2)*z_[1]*cos(2*M_PI*x)*cos(2*M_PI*y)*sin(2*M_PI*x)*sin(2*M_PI*y)
-                     +2*(1+exp(-8*t))*M_PI*cos(2*M_PI*t)*cos(2*M_PI*x)*sin(2*M_PI*x)*pow(sin(2*M_PI*y),2);
-
-             break;
-
-         default:
-             PrintError("Forcing term: Species ID exceeds the number of Species");
-
-     }
-
-     return force;
+     return 0.0;
  }
 
  double PNPManufacturedSoln::PoissonForcing(const FEMElm &fe, double t) {
-
-     const ZEROPTV p = fe.position();
-     double x = p.x();
-     double y = p.y();
-
-     double force = (1+exp(-8*t))*z_[1]*cos(2*M_PI*y)*sin(2*M_PI*x)
-             -16*(-1-exp(-8*t))*pow(lambda_,2)*pow(M_PI,2)*cos(2*M_PI*x)*sin(2*M_PI*y)
-             +(1+exp(-8*t))*z_[0]*cos(2*M_PI*x)*sin(2*M_PI*y);
-
-
-     return force;
+     return 0.0;
  }
 
  void PNPManufacturedSoln::fillEssBC() {
      //const int nsd = p_grid_->nsd();  // TODO will be wrong when loading from Gmsh meshes
      const int noOfSpecies = PNPNodeData::NO_OF_SPECIES;
-     const int phi_idx = PNPNodeData::PHI_IDX;
      const double t = this->t_;
      double dt = this->dt_;
 
      this->initEssBC();
-
-     //PrintStatus("Fill Essential BC initialised");
 
      for (int nodeID = 0; nodeID < this->p_grid_->n_nodes(); nodeID++) {
 
@@ -105,154 +56,40 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd)
 
          ZEROPTV p = p_data_->p_grid_->GetNode(nodeID)->location();
 
-         for (int boundary = LEFT; boundary <= FRONT; boundary++) {
-             //Does the node lie on the specific boundary?
-             if (p_grid_->BoNode(nodeID, boundary)){
+         // Does the node lie on the left boundary?
+         if (p_grid_->BoNode(nodeID, LEFT)){
+             double phi = -1.0;
+             p_data_->GetNodeData(nodeID).u[PNPNodeData::PHI_IDX] = phi;
+         }
 
-                 //Loop over all species - do nothing for C species
-
-                 /***
-                 for (int species_idx = 0; species_idx < noOfSpecies; species_idx++) {
-                     //Is this Dirichlet imposition?
-                     if(BoundaryConditionArray_(boundary, species_idx) == DIRICHLET) {
-                         double c = calc_C_at(p,  t+dt, species_idx);
-                         p_data_->GetNodeData(nodeID).u[PNPNodeData::C_IDX + species_idx] = c;
-                     }
-                 }
-                 ***/
-
-                 //Check on Phi
-                 if(BoundaryConditionArray_(boundary, phi_idx) == DIRICHLET) {
-                     double phi = 0.0;
-                     if (boundary == LEFT) {phi = -1.0;}
-                     if (boundary == RIGHT) {phi = 1.0;}
-
-                     p_data_->GetNodeData(nodeID).u[PNPNodeData::PHI_IDX] = phi;
-                 }
-
-             }
-
+         // Does the node lie on the right boundary?
+         if (p_grid_->BoNode(nodeID, RIGHT)){
+             double phi = 1.0;
+             p_data_->GetNodeData(nodeID).u[PNPNodeData::PHI_IDX] = phi;
          }
 
      }
  }
 
  double PNPManufacturedSoln::calc_C_at(const ZEROPTV &location, const double &t, int species_idx) {
-
-     double value = 0.0;
-     double x = location.x();
-     double y = location.y();
-
-     switch (species_idx){
-         case 0:
-             value = (1+exp(-8*t))*cos(2*M_PI*x)*sin(2*M_PI*y);
-             break;
-
-         case 1:
-             value = (1+exp(-8*t))*cos(2*M_PI*y)*sin(2*M_PI*x);
-             break;
-
-         default:
-             PrintError("Calculate C at: Species ID exceeds the number of Species");
-             return 0;
-     }
-     return value;
+    return 0.0;
  }
 
  double PNPManufacturedSoln::calc_Phi_at(const ZEROPTV &location, const double &t) {
-
-     double x = location.x();
-     double y = location.y();
-     return -(1+exp(-8*t))*cos(2*M_PI*x)*sin(2*M_PI*y);
+    return 0.0;
  }
 
 
  ZEROPTV PNPManufacturedSoln::calc_grad_C_at(const ZEROPTV &location, const double &t, int species_idx) {
-        double dC_dx = 0.0;
-        double dC_dy = 0.0;
-        double dC_dz = 0.0;
-
-        double x = location.x();
-        double y = location.y();
-
-        switch (species_idx){
-            case 0:
-                dC_dx = -2*(1+exp(-8*t))*M_PI*sin(2*M_PI*x)*sin(2*M_PI*y);
-                dC_dy = 2*(1+exp(-8*t))*M_PI*cos(2*M_PI*x)*cos(2*M_PI*y);
-
-                break;
-
-            case 1:
-                dC_dx = 2*(1+exp(-8*t))*M_PI*cos(2*M_PI*x)*cos(2*M_PI*y);
-                dC_dy = -2*(1+exp(-8*t))*M_PI*sin(2*M_PI*x)*sin(2*M_PI*y);
-
-                break;
-
-            default:
-                PrintError("Calculate GradC at: Species ID exceeds the number of Species");
-                return ZEROPTV(0.0, 0.0, 0.0);
-
-        }
-
-     return ZEROPTV(dC_dx, dC_dy, dC_dz);
+    return ZEROPTV(0.0,0.0,0.0);
  }
 
  ZEROPTV PNPManufacturedSoln::calc_grad_Phi_at(const ZEROPTV &location, const double &t) {
-
-     double x = location.x();
-     double y = location.y();
-
-     double dPhi_dx = -2*(-1-exp(-8*t))*M_PI*sin(2*M_PI*x)*sin(2*M_PI*y);
-     double dPhi_dy = 2*(-1-exp(-8*t))*M_PI*cos(2*M_PI*x)*cos(2*M_PI*y);
-     double dPhi_dz = 0;
-
-
-     return ZEROPTV(dPhi_dx, dPhi_dy, dPhi_dz);
+     return ZEROPTV(0.0, 0.0, 0.0);
  }
 
 
  void PNPManufacturedSoln::calcbe_weak(const FEMElm &fe, int sideInd, ZEROARRAY<double> &be) {
-
-     const int noOfSpecies = PNPNodeData::NO_OF_SPECIES;
-
-     const int nbf = fe.nbf();
-     const double detSideJxW = fe.detJxW();
-
-     const ZEROPTV &p = fe.position();
-     const ZEROPTV &normal = fe.surface()->normal();
-
-     const int C1Index = 0;
-     if (BoundaryConditionArray_(sideInd, C1Index) == NEUMANN) {
-         for (int a = 0; a < nbf; a++) {
-             double gradCxNormal = calc_grad_C_at(p, t_ + dt_, C1Index).innerProduct(normal);
-             be((noOfSpecies + 1) * a + C1Index) += - fe.N(a) * gradCxNormal * detSideJxW;
-         }
-     }
-
-     const int C2Index = 1;
-     if (BoundaryConditionArray_(sideInd, C2Index) == NEUMANN) {
-         for (int a = 0; a < nbf; a++) {
-             double gradCxNormal = calc_grad_C_at(p, t_ + dt_, C2Index).innerProduct(normal);
-             be((noOfSpecies + 1) * a + C2Index) += - fe.N(a) * gradCxNormal * detSideJxW;
-         }
-     }
-
-     const int phi_idx = PNPNodeData::PHI_IDX;
-     if(BoundaryConditionArray_(sideInd, phi_idx) == NEUMANN) {
-         const double lambda_ = lambda_;
-         double gradPhixNormal = calc_grad_Phi_at(p,t_ + dt_).innerProduct(normal);
-         for (int a = 0; a < nbf; a++){
-
-             for (int i = 0; i < noOfSpecies; i++) {
-                 double c = calc_C_at(p, t_ + dt_, i);
-                 be((noOfSpecies + 1)*a + i) +=  - fe.N(a) * z_[i] * c * gradPhixNormal * detSideJxW;
-             }
-
-             be((noOfSpecies + 1)*a + phi_idx) += - 2 * lambda_ * lambda_ * fe.N(a) * gradPhixNormal * detSideJxW;
-
-         }
-     }
-
 
  }
 
