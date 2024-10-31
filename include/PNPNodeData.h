@@ -28,13 +28,9 @@ class PNPNodeData {
     C_IDX = 0,                                   //Species Concentration
     PHI_IDX = NO_OF_SPECIES,                     //Electrical Potential
 
-    C_MMS_IDX = PHI_IDX + 1,                    //Species Concentration - MMS
-    PHI_MMS_IDX = C_MMS_IDX + NO_OF_SPECIES,    //Electric Potential - MMS
-
-    NUM_VARS = (NO_OF_SPECIES + 1) * 2, //No of variables (Includes variables and MMS)
+    NUM_VARS = NO_OF_SPECIES + 1,               //No of variables (Includes variables and MMS)
 
     C_PREV_IDX = C_IDX + NUM_VARS,
-
     C_PREV_2_IDX = C_PREV_IDX + NO_OF_SPECIES,
 
   };
@@ -70,18 +66,6 @@ class PNPNodeData {
 
         case PHI_IDX:
             return "Phi";
-            break;
-
-        case C_MMS_IDX:
-            return "C1_mms";
-            break;
-
-        case C_MMS_IDX + 1:
-            return "C2_mms";
-            break;
-
-        case PHI_MMS_IDX:
-            return "Phi_mms";
             break;
 
         default:
