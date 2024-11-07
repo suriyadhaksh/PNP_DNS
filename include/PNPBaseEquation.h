@@ -90,7 +90,7 @@ public:
         this->addDof(PNPNodeData::PHI_IDX, PNPNodeData::PHI_IDX);
 
         // calculate second derivative (needed for SuPG)
-        this->add_basis_flag(BASIS_SECOND_DERIVATIVE);
+        // this->add_basis_flag(BASIS_SECOND_DERIVATIVE);
 
         timers_[kTimerSolve].set_label("Solve");
         timers_[kTimerAssemble].set_label("Assemble");
@@ -308,6 +308,7 @@ public:
         double dt = this->dt_;
         const int noOfSpecies = PNPNodeData::NO_OF_SPECIES;
         const int phi_idx = PNPNodeData::PHI_IDX;
+        ZEROPTV pt = fe.position();
 
         // ------------ solution guess vectors & arrays ------------ //
         std::vector<double> c (noOfSpecies);
@@ -323,12 +324,13 @@ public:
         }
 
         for (int species_idx = 0; species_idx < noOfSpecies; species_idx++){
+
             c[species_idx] = this->p_data_->valueFEM(fe, PNPNodeData::C_IDX + species_idx);
             c_prev[species_idx] = this->p_data_->valueFEM(fe, PNPNodeData::C_PREV_IDX + species_idx);
             c_prev_2[species_idx] = this->p_data_->valueFEM(fe, PNPNodeData::C_PREV_2_IDX + species_idx);
 
             for(int dir = 0; dir < nsd; dir ++) {
-                dc(species_idx, dir) = this->p_data_->valueDerivativeFEM(fe,PNPNodeData::C_IDX + species_idx,dir);
+                dc(species_idx, dir) = this->p_data_->valueDerivativeFEM(fe,PNPNodeData::C_IDX + species_idx, dir);
             }
         }
 
@@ -359,7 +361,7 @@ public:
                 for (int i = 0; i < noOfSpecies; i++) {
                     // Nernst Planck
                     Ae((noOfSpecies + 1)*a + i, (noOfSpecies + 1)*b + i) += Dtemporal_DC + Ddiffusion_DC + Delectromigration_DC * z_[i];
-                    Ae((noOfSpecies + 1)*a + i, (noOfSpecies + 1)*b + phi_idx) -= Delectromigration_DPhi * z_[i] * c[i];
+                    Ae((noOfSpecies + 1)*a + i, (noOfSpecies + 1)*b + phi_idx) += Delectromigration_DPhi * z_[i] * c[i];
 
                     // Poisson equation
                     Ae((noOfSpecies + 1)*a + phi_idx, (noOfSpecies + 1)*b + i) += - Dchargedensity_DC  * z_[i];
@@ -367,13 +369,12 @@ public:
                 }
 
                 // Poisson equation
-                Ae((noOfSpecies + 1)*a + phi_idx, (noOfSpecies + 1)*b + phi_idx) -= Dphilaplacian_Dphi;
+                Ae((noOfSpecies + 1)*a + phi_idx, (noOfSpecies + 1)*b + phi_idx) += Dphilaplacian_Dphi;
 
             }
 
             // ------------ assemble the rhs ------------ //
             double chargedensity = 0.0;
-
             for (int i = 0; i < noOfSpecies; i++) {
                 // double temporal = fe.N(a) * ( 3 * c[i] - 4 * c_prev[i] + c_prev_2[i] ) / (2 * dt)* detJxW;
                 double temporal = fe.N(a) * (c[i] - c_prev[i]) / dt * detJxW;
@@ -383,6 +384,7 @@ public:
                 for (int dir = 0; dir < nsd; dir++) {
                     diffusion += fe.dN(a, dir) * dc(i, dir) * detJxW;
                     electromigration += fe.dN(a, dir) * z_[i] * c[i] * dphi(dir) * detJxW;
+                    double dphi_1 = dphi(dir);
                 }
 
                 // Nernst planck
@@ -398,8 +400,7 @@ public:
             }
 
             // poisson
-            be((noOfSpecies + 1)*a + phi_idx) -= - chargedensity
-                                                 + philaplacian;
+            be((noOfSpecies + 1)*a + phi_idx) += - chargedensity + philaplacian;
         }
     }
 
@@ -426,14 +427,6 @@ protected:
 
     virtual void calcbe_weak(const FEMElm &fe, int sideInd, ZEROARRAY<double> &be) {
         //design this function in the inherited manufacturedsol class
-    }
-
-    virtual double NPForcing(const FEMElm &fe, const int species_id, double t) {
-        return 0.0;
-    }
-
-    virtual double PoissonForcing(const FEMElm &fe, double t) {
-        return 0.0;
     }
 
 };

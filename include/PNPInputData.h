@@ -75,7 +75,7 @@ struct PNPInputData : public InputData {
     ReadValue("dbLength", lambda); // read normalised Debye length
 
     for (int IDX = 0; IDX < PNPNodeData::NO_OF_SPECIES; IDX++) {
-        std::string str = "val_" + std::to_string(IDX); // read valency
+        std::string str = "val_" + std::to_string(IDX+1); // read valency
         ReadValue(str, z[IDX]);
     }
 

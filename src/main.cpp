@@ -100,7 +100,7 @@ int main(int argc, char **args) {
 
     // Set Solver parameters
     const int nOfDofPerNode = PNPNodeData::NO_OF_SPECIES + 1;  // number of degree of freedom per node
-    PNPManufacturedSoln PNPEq2(input_data.nsd);
+    PNPManufacturedSoln PNPEq2(input_data.nsd, SKIP_SURFACE_INTEGRATION);
 
     PNPEq2.setParams(input_data.lambda , input_data.L[0]/input_data.Nelem[0], input_data.z);
     PNPEq2.copyBoundaryConditions(input_data.BoundaryConditionArray);
@@ -121,6 +121,8 @@ int main(int argc, char **args) {
     int no_of_frames = 20;
     int time_skip = n_time_steps / no_of_frames;
 
+    if (time_skip < 1) {time_skip = 1;}
+
     double t = 0.0;
     int timeStepCounter = 0;
     double dt = input_data.dt;
@@ -135,8 +137,6 @@ int main(int argc, char **args) {
       data.UpdateDataStructures();
 
       PNPEq2.fillEssBC();
-
-      data.setMMSGridField(t+dt);
 
       t += dt;
       timeStepCounter++;

@@ -26,49 +26,28 @@
 
 class PNPGridField : public GridField<PNPNodeData> {
  public:
+
   PNPGridField(PNPInputData *input_data_in) : input_data_(input_data_in) {};
 
   void SetIC(int nsd) {
 
       const int noOfSpecies = PNPNodeData::NO_OF_SPECIES;
       const int phi_idx = PNPNodeData::PHI_IDX;
-      const int c_mms_idx = PNPNodeData::C_MMS_IDX;
-      const int phi_mms_idx = PNPNodeData::PHI_MMS_IDX;
 
       for (int nodeID = 0; nodeID < p_grid_->n_nodes(); nodeID++) {
           PNPNodeData* pData = &(GetNodeData(nodeID));
           ZEROPTV pt = p_grid_->GetNode(nodeID)->location();
 
           for (int i = 0; i < noOfSpecies; i++) {
-              //double c_init = pnpeq_->calc_C_at(pt, 0, i);
               double c_init = 1.0; // for leading order case
               pData->u[i] = c_init;
               pData->u_prev[i] = c_init;
               pData->u_prev2[i] = c_init;
-              pData->u[c_mms_idx + i] = c_init;
           }
 
-          // double phi_init = pnpeq_->calc_Phi_at(pt,0);
-          double phi_init = 0.0;
-          pData->u[phi_idx] = phi_init;
-          pData->u[phi_mms_idx] = phi_init;
-      }
-  }
+          double phi = 0.0;
+          pData->u[phi_idx] = phi;
 
-  void setMMSGridField(double t) {
-      const int noOfSpecies = PNPNodeData::NO_OF_SPECIES;
-      const int c_mms_idx = PNPNodeData::C_MMS_IDX;
-      const int phi_mms_idx = PNPNodeData::PHI_MMS_IDX;
-
-      for (int node_id = 0; node_id < p_grid_->n_nodes(); node_id++) {
-          PNPNodeData* pData = &(GetNodeData(node_id));
-          ZEROPTV p = p_grid_->GetNode(node_id)->location();
-          for (int i = 0; i < noOfSpecies; i++) {
-              double c_mms = pnpeq_->calc_C_at(p, t, i);
-              pData->value(c_mms_idx+i) = c_mms;
-          }
-          double phi_mms = pnpeq_->calc_Phi_at(p,t);
-          pData->value(phi_mms_idx) = phi_mms;
       }
   }
 
@@ -190,12 +169,12 @@ class PNPGridField : public GridField<PNPNodeData> {
 
 
         for (int i = 0; i < noOfSpecies; i++) {
-            double manufacturedCSol = pnpeq_->calc_C_at(fe.position(),t,i);
+            double manufacturedCSol = 0.0;
             double calculatedCSol = valueFEM(fe, i);
             l2_error[i] += (manufacturedCSol - calculatedCSol) * (manufacturedCSol - calculatedCSol) * detJxW;
         }
 
-        double manufacturedPhiSol = pnpeq_->calc_Phi_at(fe.position(),t);
+        double manufacturedPhiSol = 0.0;
         double calculatedPhiSol = valueFEM(fe, phi_idx);
         l2_error[phi_idx] += (manufacturedPhiSol - calculatedPhiSol) * (manufacturedPhiSol - calculatedPhiSol) * detJxW;
 
@@ -236,13 +215,13 @@ class PNPGridField : public GridField<PNPNodeData> {
               for (int i = 0; i < noOfSpecies; i++) {
                   PrintStatus("Calculating error for species ", i);
                   double localL2error = 0.0;
-                  double manufacturedCSol = pnpeq_->calc_C_at(fe.position(),t,i);
+                  double manufacturedCSol = 0.0;
                   double calculatedCSol = valueFEM(fe, i);
                   absManufacSol[i] += manufacturedCSol * manufacturedCSol * detJxW;
                   l2_error[i] += (manufacturedCSol - calculatedCSol) * (manufacturedCSol - calculatedCSol) * detJxW;
               }
 
-              double manufacturedPhiSol = pnpeq_->calc_Phi_at(fe.position(),t);
+              double manufacturedPhiSol = 0.0;
               double calculatedPhiSol = valueFEM(fe, phi_idx);
               absManufacSol[phi_idx] += manufacturedPhiSol * manufacturedPhiSol * detJxW;
               l2_error[phi_idx] += (manufacturedPhiSol - calculatedPhiSol) * (manufacturedPhiSol - calculatedPhiSol) * detJxW;

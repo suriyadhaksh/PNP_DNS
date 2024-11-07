@@ -28,7 +28,7 @@ class PNPNodeData {
     C_IDX = 0,                                   //Species Concentration
     PHI_IDX = NO_OF_SPECIES,                     //Electrical Potential
 
-    NUM_VARS = NO_OF_SPECIES + 1,               //No of variables (Includes variables and MMS)
+    NUM_VARS = NO_OF_SPECIES + 1,               //No of variables
 
     C_PREV_IDX = C_IDX + NUM_VARS,
     C_PREV_2_IDX = C_PREV_IDX + NO_OF_SPECIES,
@@ -40,11 +40,11 @@ class PNPNodeData {
   double u_prev2[NO_OF_SPECIES]; //U^{n-2} Array
 
   inline double& value(int index) {
-    if (index >= 0 && index < C_PREV_IDX) // 0, 1 = C, 2 = PHI, 3, 4 = C_MMS, 5 = PHI_MMS
+    if (index >= 0 && index < C_PREV_IDX) // 0, 1 = C, 2 = PHI
       return u[index];
-    else if (index >= C_PREV_IDX && index < C_PREV_2_IDX)  //6, 7 = C_PREV
+    else if (index >= C_PREV_IDX && index < C_PREV_2_IDX)  //3, 4 = C_PREV
       return u_prev[index - C_PREV_IDX];
-    else if (index >= C_PREV_2_IDX && index < C_PREV_2_IDX + NO_OF_SPECIES)  //8, 9 = C_PREV_PREV
+    else if (index >= C_PREV_2_IDX && index < C_PREV_2_IDX + NO_OF_SPECIES)  //5, 6 = C_PREV_PREV
       return u_prev2[index - C_PREV_2_IDX];
     else
       throw TALYException() << "Invalid NodeData index";
