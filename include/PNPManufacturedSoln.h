@@ -28,13 +28,10 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd, SurfaceIntegrationBehavior sur
 
      for (int nodeID = 0; nodeID < this->p_grid_->n_nodes(); nodeID++) {
 
-         //PrintStatus("Checking node: ", nodeID, "for Dirichlet");
-
          ZEROPTV p = p_data_->p_grid_->GetNode(nodeID)->location();
 
          // Does the node lie on the left boundary?
          if (p_grid_->BoNode(nodeID, LEFT)){
-             //std::cout<<"We are inside left node"<<std::endl;
              double phi = -1.0;
              p_data_->GetNodeData(nodeID).u[PNPNodeData::PHI_IDX] = phi;
              specifyValue(nodeID, PNPNodeData::PHI_IDX, 0.0);
@@ -42,7 +39,6 @@ PNPManufacturedSoln::PNPManufacturedSoln(int nsd, SurfaceIntegrationBehavior sur
 
          // Does the node lie on the right boundary?
          if (p_grid_->BoNode(nodeID, RIGHT)){
-             //std::cout<<"We are inside right node"<<std::endl;
              double phi = 1.0;
              p_data_->GetNodeData(nodeID).u[PNPNodeData::PHI_IDX] = phi;
              specifyValue(nodeID, PNPNodeData::PHI_IDX, 0.0);
