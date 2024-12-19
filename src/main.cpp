@@ -102,7 +102,7 @@ int main(int argc, char **args) {
     const int nOfDofPerNode = PNPNodeData::NO_OF_SPECIES + 1;  // number of degree of freedom per node
     PNPManufacturedSoln PNPEq2(input_data.nsd, SKIP_SURFACE_INTEGRATION);
 
-    PNPEq2.setParams(input_data.lambda , input_data.L[0]/input_data.Nelem[0], input_data.z);
+    PNPEq2.setParams(input_data.lambda , input_data.L[0]/input_data.Nelem[0], input_data.z, input_data.use_stab_);
     PNPEq2.copyBoundaryConditions(input_data.BoundaryConditionArray);
 
 
@@ -120,6 +120,7 @@ int main(int argc, char **args) {
     int n_time_steps = int( input_data.totalT / input_data.dt );
     int no_of_frames = 20;
     int time_skip = n_time_steps / no_of_frames;
+    time_skip = 1;
 
     if (time_skip < 1) {time_skip = 1;}
 

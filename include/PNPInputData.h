@@ -29,6 +29,7 @@ struct PNPInputData : public InputData {
   bool ifPrintPltFiles;  ///< whether to print .plt files at start and end
   bool shouldFail;  ///< whether or not this run.sh should fail (for unit testing)
   bool use_bdf2_; //?<whether to use BDF2 or not. This code has no implementation for non-BDF2 cases
+  bool use_stab_;
   double dt;
   double totalT;
   double lambda; //Normalised Debye length
@@ -40,7 +41,8 @@ struct PNPInputData : public InputData {
         shouldFail(false),
         totalT(1.0),
         dt(1e-2),
-        use_bdf2_(true){
+        use_bdf2_(true),
+        use_stab_(false){
 
       for (int idx = 0; idx < PNPNodeData::NO_OF_SPECIES; idx++) {
           z[idx] = 1.0;
@@ -71,6 +73,7 @@ struct PNPInputData : public InputData {
     ReadValue("shouldFail", shouldFail);
     ReadValue("dt", dt);
     ReadValue("use_bdf2", use_bdf2_);
+    ReadValue("use_stab", use_stab_);
     ReadValue("totalT", totalT);
     ReadValue("dbLength", lambda); // read normalised Debye length
 
