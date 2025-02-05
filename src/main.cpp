@@ -9,6 +9,7 @@
 #include <PNPGridField.h>
 //#include <derived_example.h>
 #include <PNPManufacturedSoln.h>
+#include <PNPClusterGrid.h>
 #include <UtilFunctions.h>
 using namespace TALYFEMLIB;
 static char help[] = "Solves the Poisson-Nernst-Planck equations!";
@@ -35,6 +36,23 @@ inline bool SetIC(PNPGridField& data, PNPInputData& idata) {
     default:
       if (rank == 0) std::cerr << "IC not set up " << std::endl;
       return false;
+  }
+}
+
+// Function to create a cosine grid
+void ApplyCosineSpacingToGrid(GRID *p_grid, double Lx = 1.0, double epsilon = 0.05, int min_boundary_nodes = 9) {
+  int num_nodes = p_grid->n_nodes();  // Get the number of nodes
+
+  // Create a cosine spaced grid generator
+  PNPClusterGrid clusterGrid(0.0, Lx, num_nodes, epsilon, min_boundary_nodes);
+
+  // Generate the cosine-spaced grid
+  std::vector<double> new_x_coords = clusterGrid.generateGrid();
+
+  // Update the grid node coordinates
+  for (int node_id = 0; node_id < num_nodes; node_id++) {
+    double x_new = new_x_coords[node_id];  // Get new x-coordinate
+    p_grid->node_array_[node_id]->setCoor(0, x_new);  // Update only x-coordinate
   }
 }
 
@@ -79,6 +97,9 @@ int main(int argc, char **args) {
     // Based on inputdata create Grid
     CreateGrid(p_grid, &input_data);
 
+    // Apply cosine spacing transformation
+    ApplyCosineSpacingToGrid(p_grid, input_data.L[0]);
+
     // check gaussian quadrature
     /*FEMElm fe(p_grid, BASIS_ALL);
     fe.refill(0, input_data.basisRelativeOrder);
@@ -117,9 +138,10 @@ int main(int argc, char **args) {
 
     save_gf(&data, &input_data, "data_initial.plt", 0.0);
 
-    int n_time_steps = int( input_data.totalT / input_data.dt );
-    int no_of_frames = 20;
+    int n_time_steps = input_data.noOfTimeSteps;
+    int no_of_frames = input_data.noOfTimeFrames;
     int time_skip = n_time_steps / no_of_frames;
+    double lambda = input_data.lambda;
 
     if (time_skip < 1) {time_skip = 1;}
 
@@ -127,7 +149,7 @@ int main(int argc, char **args) {
     int timeStepCounter = 0;
     double dt = input_data.dt;
 
-    while (t < input_data.totalT) {
+    while (timeStepCounter < n_time_steps) {
 
       PrintStatus("Solver time step:", timeStepCounter);
 
@@ -141,7 +163,7 @@ int main(int argc, char **args) {
       t += dt;
       timeStepCounter++;
 
-      if (timeStepCounter%time_skip == 0) {
+      if (timeStepCounter%time_skip == 0 && t > lambda * lambda) {
           std::string name = Suffix("data.plt", timeStepCounter);
           save_gf(&data, &input_data, (char *) name.c_str(), t);
       }

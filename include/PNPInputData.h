@@ -29,6 +29,8 @@ struct PNPInputData : public InputData {
   bool ifPrintPltFiles;  ///< whether to print .plt files at start and end
   bool shouldFail;  ///< whether or not this run.sh should fail (for unit testing)
   bool use_bdf2_; //?<whether to use BDF2 or not. This code has no implementation for non-BDF2 cases
+  int noOfTimeFrames;
+  int noOfTimeSteps;
   double dt;
   double totalT;
   double lambda; //Normalised Debye length
@@ -70,9 +72,19 @@ struct PNPInputData : public InputData {
     ReadValue("ifPrintPltFiles", ifPrintPltFiles);
     ReadValue("shouldFail", shouldFail);
     ReadValue("dt", dt);
+
+
     ReadValue("use_bdf2", use_bdf2_);
     ReadValue("totalT", totalT);
     ReadValue("dbLength", lambda); // read normalised Debye length
+
+    double dt_temp = dt;
+    noOfTimeFrames = 1000;
+    int numberOfTimeStepsInOnePeriod = int(totalT / dt_temp);
+
+    // Adjust dt to ensure an integer number of time steps in one period and it should be a multiple of 1000
+    noOfTimeSteps = ceil(numberOfTimeStepsInOnePeriod / noOfTimeFrames) * noOfTimeFrames;
+    dt = totalT / numberOfTimeStepsInOnePeriod;
 
     for (int IDX = 0; IDX < PNPNodeData::NO_OF_SPECIES; IDX++) {
         std::string str = "val_" + std::to_string(IDX+1); // read valency
