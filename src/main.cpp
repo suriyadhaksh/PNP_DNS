@@ -56,6 +56,23 @@ void ApplyCosineSpacingToGrid(GRID *p_grid, double Lx = 1.0, double epsilon = 0.
   }
 }
 
+void ApplyLogarthmicSpacingToGrid(GRID *p_grid, double Lx = 1.0, double epsilon = 0.05, int min_boundary_nodes = 9) {
+  int num_nodes = p_grid->n_nodes();  // Get the number of nodes
+
+  // Create a cosine spaced grid generator
+  PNPClusterGrid clusterGrid(0.0, Lx, num_nodes, epsilon, min_boundary_nodes);
+
+  // Generate the cosine-spaced grid
+  std::vector<double> new_x_coords = clusterGrid.generateGrid();
+
+  // Update the grid node coordinates
+  for (int node_id = 0; node_id < num_nodes; node_id++) {
+    double x_new = new_x_coords[node_id];  // Get new x-coordinate
+    p_grid->node_array_[node_id]->setCoor(0, x_new);  // Update only x-coordinate
+  }
+
+}
+
 
 int main(int argc, char **args) {
   PetscInitialize(&argc, &args, NULL, help);
@@ -98,7 +115,7 @@ int main(int argc, char **args) {
     CreateGrid(p_grid, &input_data);
 
     // Apply cosine spacing transformation
-    ApplyCosineSpacingToGrid(p_grid, input_data.L[0]);
+    ApplyLogarthmicSpacingToGrid(p_grid, input_data.L[0], input_data.lambda);
 
     // check gaussian quadrature
     /*FEMElm fe(p_grid, BASIS_ALL);
@@ -175,7 +192,7 @@ int main(int argc, char **args) {
       //std::string name = Suffix("data.plt", t / dt);
       //save_gf(&data, &input_data, (char *) name.c_str(), t);
       //PrintInfo("time t = ", t);
-//        data.PrintError(t);
+      //data.PrintError(t);
 
     }
 
