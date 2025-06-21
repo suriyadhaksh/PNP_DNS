@@ -15,6 +15,14 @@ public:
 
     // Generate the cosine-spaced grid
     std::vector<double> generateGrid() const {
+
+        //double Lx = x_end - x_start;
+        //double h_ = Lx / (no_of_nodes - 1);
+
+        //if (epsilon/h_ > 8.0) {
+            //return computeLinearSpacing();
+        //}
+
         //double optimal_amp = fitAmplitude(min_boundary_nodes);
         //return computeCosineSpacing(optimal_amp);
         double optimal_offset = fitOffset(min_boundary_nodes);
